@@ -7,17 +7,19 @@ ENV='environment'
 REGION='eu-west-1'
 RESOURCE=()
 OPERATION='create'
+DRY_RUN=false
 
 print_help()
 {
     cat << EOF
-    usage: $0 [-h] -o [create,update] -e [Environment] stackname1 stackname2 stackname3 ...
+    usage: $0 [-h] -o [create,update] -e [Environment] -d stackname1 stackname2 stackname3 ...
 
     This script create or update cloudformation script
 
     OPTIONS:
        -h      Show this message
        -e      Environment name
+       -d      Dry run. Only print aws commands
 EOF
 }
 
@@ -33,7 +35,10 @@ create_stack(){
         --region $REGION \
         --capabilities CAPABILITY_NAMED_IAM"
         echo $command
-        $command
+        if ! $DRY_RUN
+        then
+            $command
+        fi
 
         aws cloudformation \
         wait stack-create-complete \
@@ -56,7 +61,10 @@ update_stack()
         --region $REGION \
         --capabilities CAPABILITY_NAMED_IAM"
         echo $command
-        $command
+        if ! $DRY_RUN
+        then
+            $command
+        fi
 
     done
 }
@@ -66,7 +74,7 @@ update_stack()
 ### MAIN ###
 ############
 
-while getopts "he:o:" opt
+while getopts "he:o:d" opt
 do
      case $opt in
         h)
@@ -78,7 +86,10 @@ do
             ;;
         o)
             OPERATION=$OPTARG
-            ;;            
+            ;;
+        d)
+            DRY_RUN=true
+            ;;
         ?)
             echo "Option/s error/s"
             print_help
