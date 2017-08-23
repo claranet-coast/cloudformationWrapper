@@ -14,7 +14,7 @@ TEMPLATE_EXTENSION='yaml' #or yml. Depends on your preference
 print_help()
 {
     cat << EOF
-    usage: $0 [-h] -o [create,update] -e [Environment] -d stackname1 stackname2 stackname3 ...
+    usage: $0 [-h] -o [create,update] -e [Environment] -d resourcename1 resourcename2 ...
 
     This script create or update cloudformation script
 
@@ -23,6 +23,21 @@ print_help()
        -e      Environment name
        -o      Operation to do. Allowed values [create, update]
        -d      Dry run. Only print aws commands
+     
+     CONVENTIONS:
+     This script assumes that the template and parameters file name have a specific format:
+     Template: <resourcename>.<extension>
+     Parameters: <resourcename>-parameters-<environment>.json
+     
+     This script create stack with this name:
+     <project>-<environment>-<resourcename>
+     
+     Example:
+     I have a template that create an rds for production environment for a project called github.
+     Template name: rds.yaml
+     Parameters name: rds-parameters-production.json
+     After run this command: ./$0 -o create -e production rds
+     the stack 'github-production-rds' will be created
 EOF
 }
 
