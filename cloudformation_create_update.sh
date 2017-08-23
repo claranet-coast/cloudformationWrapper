@@ -19,6 +19,7 @@ print_help()
     OPTIONS:
        -h      Show this message
        -e      Environment name
+       -o      Operation to do. Allowed values [create, update]
        -d      Dry run. Only print aws commands
 EOF
 }
