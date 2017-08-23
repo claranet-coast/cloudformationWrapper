@@ -8,6 +8,8 @@ REGION='eu-west-1'
 RESOURCE=()
 OPERATION='create'
 DRY_RUN=false
+PARAMETERS_FOLDER='parameters' # '.' if the same folder
+TEMPLATE_EXTENSION='yaml' #or yml. Depends on your preference
 
 print_help()
 {
@@ -31,8 +33,8 @@ create_stack(){
         create-stack \
         --profile $PROFILE \
         --stack-name $PROJECT-$ENV-$res \
-        --template-body file://$res.yaml \
-        --parameters file://parameters/$res-parameters-$ENV.json \
+        --template-body file://$res.$TEMPLATE_EXTENSION \
+        --parameters file://$PARAMETERS_FOLDER/$res-parameters-$ENV.json \
         --region $REGION \
         --capabilities CAPABILITY_NAMED_IAM"
         echo $command
@@ -57,8 +59,8 @@ update_stack()
         update-stack \
         --profile $PROFILE \
         --stack-name $PROJECT-$ENV-$res \
-        --template-body file://$res.yaml \
-        --parameters file://parameters/$res-parameters-$ENV.json \
+        --template-body file://$res.$TEMPLATE_EXTENSION \
+        --parameters file://$PARAMETERS_FOLDER/$res-parameters-$ENV.json \
         --region $REGION \
         --capabilities CAPABILITY_NAMED_IAM"
         echo $command
