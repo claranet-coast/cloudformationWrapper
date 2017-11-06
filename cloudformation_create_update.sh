@@ -56,6 +56,7 @@ create_stack(){
         if ! $DRY_RUN
         then
             $command
+            exit 0
         fi
 
         aws cloudformation \
@@ -82,6 +83,7 @@ update_stack()
         if ! $DRY_RUN
         then
             $command
+            exit 0
         fi
 
     done
