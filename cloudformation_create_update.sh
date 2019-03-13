@@ -21,17 +21,17 @@ usage: $0 [-h] -o [create,update] -e [Environment] -d resourcename1 resourcename
     OPTIONS:
        -h      Show this message
        -e      Environment name
-       -o      Operation to do. Allowed values [create, update]
+       -o      Operation to do. Allowed values [create, update, delete]
        -d      Dry run. Only print aws commands
-     
+
  CONVENTIONS:
  This script assumes that the template and parameters file name have a specific format:
  Template: <resourcename>.<extension>
  Parameters: <resourcename>-parameters-<environment>.json
-     
+
  This script create stack with this name:
  <project>-<environment>-<resourcename>
- 
+
  Example:
  I have a template that create an rds for production environment for a project called github.
  Template name: rds.yaml
@@ -56,14 +56,16 @@ create_stack(){
         if ! $DRY_RUN
         then
             $command
+
+            aws cloudformation \
+            wait stack-create-complete \
+            --profile $PROFILE \
+            --stack-name $PROJECT-$ENV-$res \
+            --region $REGION
             exit 0
         fi
 
-        aws cloudformation \
-        wait stack-create-complete \
-        --profile $PROFILE \
-        --stack-name $PROJECT-$ENV-$res \
-        --region $REGION
+
     done
 }
 
@@ -83,6 +85,46 @@ update_stack()
         if ! $DRY_RUN
         then
             $command
+
+            aws cloudformation \
+            wait stack-update-complete \
+            --profile $PROFILE \
+            --stack-name $PROJECT-$ENV-$res \
+            --region $REGION
+            exit 0
+        fi
+
+    done
+}
+
+delete_stack()
+{
+    echo "Are you sure to delete stack? Type deleteme to continue"
+    read confirmation_string
+    if [[ $confirmation_string == 'deleteme' ]]
+    then
+        echo "Starting delete stack"
+    else
+        exit 1
+    fi
+
+    for res in "${RESOURCE[@]}"
+    do
+        command="aws cloudformation \
+        delete-stack \
+        --profile $PROFILE \
+        --stack-name $PROJECT-$ENV-$res \
+        --region $REGION"
+        echo $command
+        if ! $DRY_RUN
+        then
+            $command
+
+            aws cloudformation \
+            wait stack-delete-complete \
+            --profile $PROFILE \
+            --stack-name $PROJECT-$ENV-$res \
+            --region $REGION
             exit 0
         fi
 
@@ -130,6 +172,9 @@ then
 elif [[ $OPERATION == 'update' ]]
 then
     update_stack
+elif [[ $OPERATION == 'delete' ]]
+then
+    delete_stack
 else
     echo "Invalid operation $OPERATION: Allowed value are [create, update]"
     print_help
