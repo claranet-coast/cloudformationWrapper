@@ -10,6 +10,7 @@ OPERATION='create'
 DRY_RUN=false
 PARAMETERS_FOLDER='parameters' # '.' if the same folder
 TEMPLATE_EXTENSION='yaml' #or yml. Depends on your preference
+ENVIRONMENT_PARAMETER_NAME="EnvironmentVersion"
 
 print_help()
 {
@@ -47,7 +48,7 @@ create_stack(){
         command="aws cloudformation \
         create-stack \
         --profile $PROFILE \
-        --stack-name $PROJECT-$ENV-$res \
+        --stack-name $(get_stack_name $res) \
         --template-body file://$res.$TEMPLATE_EXTENSION \
         --parameters file://$PARAMETERS_FOLDER/$res-parameters-$ENV.json \
         --region $REGION \
@@ -60,7 +61,7 @@ create_stack(){
             aws cloudformation \
             wait stack-create-complete \
             --profile $PROFILE \
-            --stack-name $PROJECT-$ENV-$res \
+            --stack-name $(get_stack_name $res) \
             --region $REGION
             exit 0
         fi
@@ -76,7 +77,7 @@ update_stack()
         command="aws cloudformation \
         update-stack \
         --profile $PROFILE \
-        --stack-name $PROJECT-$ENV-$res \
+        --stack-name $(get_stack_name $res) \
         --template-body file://$res.$TEMPLATE_EXTENSION \
         --parameters file://$PARAMETERS_FOLDER/$res-parameters-$ENV.json \
         --region $REGION \
@@ -89,7 +90,7 @@ update_stack()
             aws cloudformation \
             wait stack-update-complete \
             --profile $PROFILE \
-            --stack-name $PROJECT-$ENV-$res \
+            --stack-name $(get_stack_name $res) \
             --region $REGION
             exit 0
         fi
@@ -113,7 +114,7 @@ delete_stack()
         command="aws cloudformation \
         delete-stack \
         --profile $PROFILE \
-        --stack-name $PROJECT-$ENV-$res \
+        --stack-name $(get_stack_name $res) \
         --region $REGION"
         echo $command
         if ! $DRY_RUN
@@ -123,7 +124,7 @@ delete_stack()
             aws cloudformation \
             wait stack-delete-complete \
             --profile $PROFILE \
-            --stack-name $PROJECT-$ENV-$res \
+            --stack-name $(get_stack_name $res) \
             --region $REGION
             exit 0
         fi
@@ -131,6 +132,26 @@ delete_stack()
     done
 }
 
+has_version()
+{
+    version=`cat $1 | jq --arg ENVIRONMENT_PARAMETER_NAME "$ENVIRONMENT_PARAMETER_NAME" '(.[] | select(.ParameterKey == $ENVIRONMENT_PARAMETER_NAME) | .ParameterValue)'|sed s/'"'//g`
+    echo $version
+}
+
+get_stack_name()
+{
+    resource=$1
+    version=$(has_version $PARAMETERS_FOLDER/$resource-parameters-$ENV.json)
+
+    if [ $version ]
+    then
+        name=$PROJECT-$ENV-$resource-$version
+    else
+        name=$PROJECT-$ENV-$resource
+    fi
+
+    echo $name
+}
 
 ############
 ### MAIN ###
@@ -176,6 +197,6 @@ elif [[ $OPERATION == 'delete' ]]
 then
     delete_stack
 else
-    echo "Invalid operation $OPERATION: Allowed value are [create, update]"
+    echo "Invalid operation $OPERATION: Allowed value are [create, update, delete]"
     print_help
 fi
