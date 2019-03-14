@@ -1,16 +1,16 @@
 #!/bin/bash
 
-OWNER='owner'
-PROFILE='profile-name'
-PROJECT='project-name'
-ENV='environment'
-REGION='eu-west-1'
+PROFILE=${PROFILE:-'profile-name'}
+PROJECT=${PROJECT:-'project-name'}
+ENV=${ENV:-'environment'}
+REGION=${REGION:-'eu-west-1'}
+PARAMETERS_FOLDER=${PARAMETERS_FOLDER:-'parameters'} # '.' if the same folder
+TEMPLATE_EXTENSION=${TEMPLATE_EXTENSION:-'yml'} #or yml. Depends on your preference
+ENVIRONMENT_PARAMETER_NAME=${ENVIRONMENT_PARAMETER_NAME:-'EnvironmentVersion'}
+
 RESOURCE=()
 OPERATION='create'
 DRY_RUN=false
-PARAMETERS_FOLDER='parameters' # '.' if the same folder
-TEMPLATE_EXTENSION='yaml' #or yml. Depends on your preference
-ENVIRONMENT_PARAMETER_NAME="EnvironmentVersion"
 
 print_help()
 {
