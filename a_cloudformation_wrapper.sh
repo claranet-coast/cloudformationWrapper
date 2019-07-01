@@ -16,7 +16,7 @@ DRY_RUN=false
 print_help()
 {
     cat << EOF
-usage: $0 [-h] -o [create,update] -e [Environment] -d resourcename1 resourcename2 ...
+usage: $0 [-h] -o [create,update,changeset,validate] -e [Environment] -d resourcename1 resourcename2 ...
 
     This script create or update cloudformation script
 
@@ -133,6 +133,44 @@ delete_stack()
     done
 }
 
+create_changeset_stack()
+{
+    for res in "${RESOURCE[@]}"
+    do
+        command="aws cloudformation \
+        create-change-set \
+        --profile ${PROFILE_PREFIX} \
+        --stack-name $(get_stack_name $res) \
+        --template-body file://$res.$TEMPLATE_EXTENSION \
+        --parameters file://$PARAMETERS_FOLDER/$res-parameters-$ENV.json \
+        --region $REGION \
+        --capabilities CAPABILITY_NAMED_IAM \
+        --change-set-name $res-changeset"
+        echo $command
+        if ! $DRY_RUN
+        then
+            $command
+        fi
+    done
+}
+
+validate_stack()
+{
+    for res in "${RESOURCE[@]}"
+    do
+        command="aws cloudformation \
+        validate-template \
+        --profile ${PROFILE_PREFIX}-${ENV} \
+        --region $REGION \
+        --template-body file://$res.$TEMPLATE_EXTENSION"
+        echo $command
+        if ! $DRY_RUN
+        then
+            $command
+        fi
+    done
+}
+
 has_version()
 {
     version=`cat $1 | jq --arg ENVIRONMENT_PARAMETER_NAME "$ENVIRONMENT_PARAMETER_NAME" '(.[] | select(.ParameterKey == $ENVIRONMENT_PARAMETER_NAME) | .ParameterValue)'|sed s/'"'//g`
@@ -212,6 +250,12 @@ then
 elif [[ $OPERATION == 'update' ]]
 then
     update_stack
+elif [[ $OPERATION == 'changeset' ]]
+then
+    create_changeset_stack
+elif [[ $OPERATION == 'validate' ]]
+then
+    validate_stack
 elif [[ $OPERATION == 'delete' ]]
 then
     delete_stack
