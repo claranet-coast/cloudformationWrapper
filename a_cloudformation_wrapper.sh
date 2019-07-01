@@ -12,6 +12,7 @@ ALLOWED_ENVS="dev test int prod" # space separated list of allowed environment n
 RESOURCE=()
 OPERATION=''
 DRY_RUN=false
+INSANEMODE=false # Set to true if you're not using git
 
 print_help()
 {
@@ -25,6 +26,8 @@ usage: $0 [-h] -o [create,update,changeset,validate] -e [Environment] -d resourc
        -e      Environment name
        -o      Operation to do. Allowed values [create, update, delete]
        -d      Dry run. Only print aws commands
+       -f      Force the execution of CFN even if local repo is behind the default remote one. Ignored if -d
+
 
  CONVENTIONS:
  This script assumes that the template and parameters file name have a specific format:
@@ -171,6 +174,32 @@ validate_stack()
     done
 }
 
+check_if_aligned_with_gitdefaultremote()
+{
+  git remote update
+  UPSTREAM='@{u}'
+  LOCAL=$(git rev-parse @)
+  REMOTE=$(git rev-parse "$UPSTREAM")
+  BASE=$(git merge-base @ "$UPSTREAM")
+
+  printf "Checking if the local repo is aligned with the Default Remote.. "
+
+  RES=0
+  if [ $LOCAL = $REMOTE ]; then
+      echo "Up-to-date"
+  elif [ $LOCAL = $BASE ]; then
+      echo "Need to pull"
+      RES=1
+  elif [ $REMOTE = $BASE ]; then
+      echo "Need to push"
+  else
+      echo "Diverged"
+      RES=1
+  fi
+  return $RES
+
+}
+
 has_version()
 {
     version=`cat $1 | jq --arg ENVIRONMENT_PARAMETER_NAME "$ENVIRONMENT_PARAMETER_NAME" '(.[] | select(.ParameterKey == $ENVIRONMENT_PARAMETER_NAME) | .ParameterValue)'|sed s/'"'//g`
@@ -196,7 +225,7 @@ get_stack_name()
 ### MAIN ###
 ############
 
-while getopts "he:o:d" opt
+while getopts "he:o:df" opt
 do
      case $opt in
         h)
@@ -211,6 +240,9 @@ do
             ;;
         d)
             DRY_RUN=true
+            ;;
+        f)
+            INSANEMODE=true
             ;;
         ?)
             echo "Option/s error/s"
@@ -242,6 +274,23 @@ then
    echo "Invalid environment: Allowed values are [${ALLOWED_ENVS}]"
    print_help
    exit -1
+fi
+
+check_if_aligned_with_gitdefaultremote
+GITALIGNED=$?
+if [[ $GITALIGNED != 0 && $INSANEMODE == false ]]
+then
+  echo "WARNING: There are changes on the default remote that are not present locally"
+  echo "WARNING: Do a GIT PULL first"
+  if [[ $DRYRUN != true ]]
+  then
+    exit -1
+  else
+    echo "*Ignoring warning since it is a dry run*"
+  fi
+elif [[ $INSANEMODE == true && $DRYRUN == false ]]
+then
+  echo "WARNING: USING INSANE MODE. I'm running cloudformation even if git remote is ahead"
 fi
 
 if [[ $OPERATION == 'create' ]]
