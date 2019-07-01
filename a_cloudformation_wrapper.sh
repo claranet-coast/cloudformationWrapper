@@ -7,6 +7,7 @@ REGION=${REGION:-'eu-west-1'}
 PARAMETERS_FOLDER=${PARAMETERS_FOLDER:-'parameters'} # '.' if the same folder
 TEMPLATE_EXTENSION=${TEMPLATE_EXTENSION:-'yml'} #or yml. Depends on your preference
 ENVIRONMENT_PARAMETER_NAME=${ENVIRONMENT_PARAMETER_NAME:-'EnvironmentVersion'}
+ALLOWED_ENVS="dev test int prod" # space separated list of allowed environment names
 
 RESOURCE=()
 OPERATION='create'
@@ -186,6 +187,15 @@ for var in "$@"
 do
   RESOURCE+=($var)
 done
+
+
+# Check if the environment passed as argument is allowed
+if ! [[ $ALLOWED_ENVS =~ (^|[[:space:]])$ENV($|[[:space:]]) ]]
+then
+   echo "Invalid environment: Allowed values are [${ALLOWED_ENVS}]"
+   print_help
+   exit -1
+fi
 
 if [[ $OPERATION == 'create' ]]
 then
