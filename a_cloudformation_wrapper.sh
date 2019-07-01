@@ -249,7 +249,21 @@ then
     create_stack
 elif [[ $OPERATION == 'update' ]]
 then
-    update_stack
+    echo
+    read -p "You are about to do an update stack and usually is a STUPID IDEA. You should consider doing a changeset. Do you want to do a changeset instead?[yY|nN]" -n 1 -r
+    echo    # move to a new line
+    if [[ $REPLY =~ ^[Yy]$ ]]
+    then
+        create_changeset_stack
+    elif [[ $REPLY =~ ^[Nn]$ ]]
+    then
+        echo
+        echo "Ok lets proceed with the update. If you break something you can only blame yourself."
+        echo
+        update_stack
+    else
+        echo "Unknown answer, just quitting."
+    fi
 elif [[ $OPERATION == 'changeset' ]]
 then
     create_changeset_stack
