@@ -10,7 +10,7 @@ ENVIRONMENT_PARAMETER_NAME=${ENVIRONMENT_PARAMETER_NAME:-'EnvironmentVersion'}
 ALLOWED_ENVS="dev test int prod" # space separated list of allowed environment names
 
 RESOURCE=()
-OPERATION='create'
+OPERATION=''
 DRY_RUN=false
 
 print_help()
@@ -182,6 +182,15 @@ do
      esac
 done
 shift $(( OPTIND - 1 ))
+
+if [[ -z $@ ]]
+then
+    echo
+    echo "No resource provided, please add the resource you want to work with (e.g. pvc, rds...)"
+    echo
+    print_help
+    exit -1
+fi
 
 for var in "$@"
 do
