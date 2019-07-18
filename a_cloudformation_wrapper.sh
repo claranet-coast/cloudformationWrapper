@@ -264,6 +264,26 @@ check_if_aligned_with_gitdefaultremote()
 
 }
 
+git_check()
+{
+  check_if_aligned_with_gitdefaultremote
+  GITALIGNED=$?
+  if [[ $GITALIGNED != 0 && $INSANEMODE == false ]]
+  then
+    echo "WARNING: There are changes on the default remote that are not present locally"
+    echo "WARNING: Do a GIT PULL first"
+    if [[ $DRYRUN != true ]]
+    then
+      exit -1
+    else
+      echo "*Ignoring warning since it is a dry run*"
+    fi
+  elif [[ $INSANEMODE == true && $DRYRUN == false ]]
+  then
+    echo "WARNING: USING INSANE MODE. I'm running cloudformation even if git remote is ahead"
+  fi
+}
+
 has_version()
 {
     version=`cat $1 | jq --arg ENVIRONMENT_PARAMETER_NAME "$ENVIRONMENT_PARAMETER_NAME" '(.[] | select(.ParameterKey == $ENVIRONMENT_PARAMETER_NAME) | .ParameterValue)'|sed s/'"'//g`
@@ -340,28 +360,13 @@ then
    exit -1
 fi
 
-check_if_aligned_with_gitdefaultremote
-GITALIGNED=$?
-if [[ $GITALIGNED != 0 && $INSANEMODE == false ]]
-then
-  echo "WARNING: There are changes on the default remote that are not present locally"
-  echo "WARNING: Do a GIT PULL first"
-  if [[ $DRYRUN != true ]]
-  then
-    exit -1
-  else
-    echo "*Ignoring warning since it is a dry run*"
-  fi
-elif [[ $INSANEMODE == true && $DRYRUN == false ]]
-then
-  echo "WARNING: USING INSANE MODE. I'm running cloudformation even if git remote is ahead"
-fi
-
 if [[ $OPERATION == 'create' ]]
 then
+    git_check
     create_stack
 elif [[ $OPERATION == 'update' ]]
 then
+    git_check
     echo
     read -p "You are about to do an update stack and usually is a STUPID IDEA. You should consider doing a changeset. Do you want to do a changeset instead?[yY|nN]" -n 1 -r
     echo    # move to a new line
@@ -379,6 +384,7 @@ then
     fi
 elif [[ $OPERATION == 'changeset' ]]
 then
+    git_check
     create_changeset_stack
 elif [[ $OPERATION == 'validate' ]]
 then
