@@ -152,9 +152,73 @@ create_changeset_stack()
         echo $command
         if ! $DRY_RUN
         then
+            echo -e "\nCreating Changeset:\n"
             $command
+            # Wait until the changeset creation completes
+            aws cloudformation wait change-set-create-complete \
+              --change-set-name $res-changeset \
+              --profile ${PROFILE_PREFIX} \
+              --region $REGION \
+              --stack-name $(get_stack_name $res)
+            # Describe the changeset
+            echo -e "\nDescribe Changeset:\n"
+            describe=$(aws cloudformation describe-change-set \
+              --change-set-name $res-changeset \
+              --profile ${PROFILE_PREFIX} \
+              --region $REGION \
+              --output json \
+              --stack-name $(get_stack_name $res) \
+              --query '{Status: Status, StatusReason: StatusReason, Changes: Changes}')
+            # pretty print the changeset
+            echo $describe | python -m json.tool
+            if ! [[ $describe == *"FAILED"* ]];
+            then
+              echo
+              read -p "Do you want to execute the changeset?[yY|nN]" -n 2 -r
+              echo    # move to a new line
+              if [[ $REPLY =~ ^[Yy]$ ]]
+              then
+                  execute_changeset
+              else
+                  echo "Ok, I'm NOT executing the changeset but I'm NOT deleting it either"
+                  echo "You can delete the changeset with the following command:"
+                  DRY_RUN=true #THIS prevents the changeset to be actually deleted
+                  delete_changeset
+              fi
+            else
+              delete_changeset
+              echo "Deleted useless changeset for you"
+            fi
         fi
     done
+}
+
+execute_changeset()
+{
+  command="aws cloudformation execute-change-set \
+    --change-set-name $res-changeset \
+    --profile ${PROFILE_PREFIX} \
+    --region $REGION \
+    --stack-name $(get_stack_name $res)"
+  echo $command
+  if ! $DRY_RUN
+  then
+      $command
+  fi
+}
+
+delete_changeset()
+{
+  command="aws cloudformation delete-change-set \
+    --change-set-name $res-changeset \
+    --profile ${PROFILE_PREFIX} \
+    --region $REGION \
+    --stack-name $(get_stack_name $res)"
+  echo $command
+  if ! $DRY_RUN
+  then
+      $command
+  fi
 }
 
 validate_stack()
