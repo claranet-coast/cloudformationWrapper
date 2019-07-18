@@ -17,7 +17,7 @@ INSANEMODE=false # Set to true if you're not using git
 print_help()
 {
     cat << EOF
-usage: $0 [-h] -o [create,update,changeset,validate] -e [Environment] -d resourcename1 resourcename2 ...
+usage: $0 [-h] -o [create,update,delete,changeset,validate] -e [Environment] -d resourcename1 resourcename2 ...
 
     This script create or update cloudformation script
 
@@ -323,6 +323,6 @@ elif [[ $OPERATION == 'delete' ]]
 then
     delete_stack
 else
-    echo "Invalid operation $OPERATION: Allowed value are [create, update, delete]"
+    echo "Invalid operation $OPERATION: Allowed value are [create, update, changeset, delete, validate]"
     print_help
 fi
