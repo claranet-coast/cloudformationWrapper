@@ -17,7 +17,7 @@ INSANEMODE=false # Set to true if you're not using git
 print_help()
 {
     cat << EOF
-usage: $0 [-h] -o [create,update,delete,changeset,validate] -e [Environment] -d resourcename1 resourcename2 ...
+usage: $0 [-h] -o [create,update,delete,changeset,validate,status] -e [Environment] -d resourcename1 resourcename2 ...
 
     This script create or update cloudformation script
 
@@ -227,7 +227,7 @@ validate_stack()
     do
         command="aws cloudformation \
         validate-template \
-        --profile ${PROFILE_PREFIX}-${ENV} \
+        --profile ${PROFILE_PREFIX} \
         --region $REGION \
         --template-body file://$res.$TEMPLATE_EXTENSION"
         echo $command
@@ -235,6 +235,19 @@ validate_stack()
         then
             $command
         fi
+    done
+}
+
+get_stack_status()
+{
+    for res in "${RESOURCE[@]}"
+    do
+        aws cloudformation \
+        describe-stacks \
+        --profile ${PROFILE_PREFIX} \
+        --region $REGION \
+        --stack-name $(get_stack_name $res) \
+        --query 'Stacks[*].StackStatus'
     done
 }
 
@@ -389,10 +402,13 @@ then
 elif [[ $OPERATION == 'validate' ]]
 then
     validate_stack
+elif [[ $OPERATION == 'status' ]]
+then
+    get_stack_status
 elif [[ $OPERATION == 'delete' ]]
 then
     delete_stack
 else
-    echo "Invalid operation $OPERATION: Allowed value are [create, update, changeset, delete, validate]"
+    echo "Invalid operation $OPERATION: Allowed values are [create, update, changeset, delete, validate, status]"
     print_help
 fi
