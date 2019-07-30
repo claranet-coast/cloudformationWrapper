@@ -142,7 +142,7 @@ create_changeset_stack()
     do
         command="aws cloudformation \
         create-change-set \
-        --profile ${PROFILE_PREFIX} \
+        --profile ${PROFILE} \
         --stack-name $(get_stack_name $res) \
         --template-body file://$res.$TEMPLATE_EXTENSION \
         --parameters file://$PARAMETERS_FOLDER/$res-parameters-$ENV.json \
@@ -157,14 +157,14 @@ create_changeset_stack()
             # Wait until the changeset creation completes
             aws cloudformation wait change-set-create-complete \
               --change-set-name $res-changeset \
-              --profile ${PROFILE_PREFIX} \
+              --profile ${PROFILE} \
               --region $REGION \
               --stack-name $(get_stack_name $res)
             # Describe the changeset
             echo -e "\nDescribe Changeset:\n"
             describe=$(aws cloudformation describe-change-set \
               --change-set-name $res-changeset \
-              --profile ${PROFILE_PREFIX} \
+              --profile ${PROFILE} \
               --region $REGION \
               --output json \
               --stack-name $(get_stack_name $res) \
@@ -197,7 +197,7 @@ execute_changeset()
 {
   command="aws cloudformation execute-change-set \
     --change-set-name $res-changeset \
-    --profile ${PROFILE_PREFIX} \
+    --profile ${PROFILE} \
     --region $REGION \
     --stack-name $(get_stack_name $res)"
   echo $command
@@ -211,7 +211,7 @@ delete_changeset()
 {
   command="aws cloudformation delete-change-set \
     --change-set-name $res-changeset \
-    --profile ${PROFILE_PREFIX} \
+    --profile ${PROFILE} \
     --region $REGION \
     --stack-name $(get_stack_name $res)"
   echo $command
@@ -227,7 +227,7 @@ validate_stack()
     do
         command="aws cloudformation \
         validate-template \
-        --profile ${PROFILE_PREFIX} \
+        --profile ${PROFILE} \
         --region $REGION \
         --template-body file://$res.$TEMPLATE_EXTENSION"
         echo $command
@@ -244,7 +244,7 @@ get_stack_status()
     do
         aws cloudformation \
         describe-stacks \
-        --profile ${PROFILE_PREFIX} \
+        --profile ${PROFILE} \
         --region $REGION \
         --stack-name $(get_stack_name $res) \
         --query 'Stacks[*].StackStatus'
