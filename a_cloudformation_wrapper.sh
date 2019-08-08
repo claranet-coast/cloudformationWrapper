@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 PROFILE=${PROFILE:-'profile-name'}
 PROJECT=${PROJECT:-'project-name'}
