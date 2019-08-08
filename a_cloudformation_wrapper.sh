@@ -1,4 +1,9 @@
 #!/bin/bash
+
+## Script Version ####
+SCRIPT_VERSION="1.0" #
+######################
+
 set -e
 
 PROFILE=${PROFILE:-'profile-name'}
@@ -44,7 +49,15 @@ usage: $0 [-h] -o [create,update,delete,changeset,validate,status] -e [Environme
  Parameters name: rds-parameters-production.json
  After run this command: ./$0 -o create -e production rds
  the stack 'github-production-rds' will be created
+
+$0: Version: $SCRIPT_VERSION. For more details see the project page https://github.com/claranet-coast/cloudformationWrapper
+
 EOF
+}
+
+print_version()
+{
+    echo $SCRIPT_VERSION
 }
 
 create_stack(){
@@ -323,7 +336,7 @@ get_stack_name()
 ### MAIN ###
 ############
 
-while getopts "he:o:df" opt
+while getopts "vhe:o:df" opt
 do
      case $opt in
         h)
@@ -341,6 +354,10 @@ do
             ;;
         f)
             INSANEMODE=true
+            ;;
+        v)
+            print_version
+            exit 1
             ;;
         ?)
             echo "Option/s error/s"
