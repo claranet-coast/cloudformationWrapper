@@ -70,6 +70,7 @@ create_stack(){
         --template-body file://$res.$TEMPLATE_EXTENSION \
         --parameters file://$PARAMETERS_FOLDER/$res-parameters-$ENV.json \
         --region $REGION \
+        --enable-termination-protection \
         --capabilities CAPABILITY_NAMED_IAM"
         echo $command
         if ! $DRY_RUN
