@@ -30,7 +30,7 @@ usage: $0 [-h] -o [create,update,delete,changeset,validate,status] -e [Environme
     OPTIONS:
        -h      Show this message
        -e      Environment name
-       -o      Operation to do. Allowed values [create, update, delete]
+       -o      Operation to do. Allowed values [create, update, changeset, delete, validate, status]
        -d      Dry run. Only print aws commands
        -f      Force the execution of CFN even if local repo is behind the default remote one. Ignored if -d
 
