@@ -268,7 +268,7 @@ get_stack_status()
 
 check_if_aligned_with_gitdefaultremote()
 {
-  git remote update
+  git remote update origin
   UPSTREAM='@{u}'
   LOCAL=$(git rev-parse @)
   REMOTE=$(git rev-parse "$UPSTREAM")
