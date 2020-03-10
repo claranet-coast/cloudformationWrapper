@@ -119,33 +119,64 @@ update_stack()
 
 delete_stack()
 {
-    echo "Are you sure to delete stack? Type deleteme to continue"
+    echo "Are you sure to delete stack? (Type deleteme to continue)"
     read confirmation_string
-    if [[ $confirmation_string == 'deleteme' ]]
+    if [[ $confirmation_string != 'deleteme' ]]
     then
-        echo "Starting delete stack"
-    else
         exit 1
     fi
 
     for res in "${RESOURCE[@]}"
     do
-        command="aws cloudformation \
+        stack_name=$(get_stack_name $res)
+        delete_command="aws cloudformation \
         delete-stack \
         --profile $PROFILE \
-        --stack-name $(get_stack_name $res) \
+        --stack-name $stack_name \
         --region $REGION"
-        echo $command
         if ! $DRY_RUN
         then
-            $command
+            check_termination_protection_command="aws cloudformation \
+            describe-stacks \
+            --profile $PROFILE \
+            --stack-name $stack_name \
+            --query Stacks[0].EnableTerminationProtection \
+            --output json \
+            --region $REGION"
+            echo $check_termination_protection_command
+            echo "Checking termination protection:"
+            if [[ $($check_termination_protection_command) == 'true' ]]
+            then
+                echo "The stack has termination protection enabled, do you still want to continue? (Type yes to continue)"
+                read tp_confirmation_string
+                if [[ $tp_confirmation_string == 'yes' ]]
+                then
+                    disable_termination_protection_command="aws cloudformation \
+                    update-termination-protection \
+                    --no-enable-termination-protection \
+                    --profile $PROFILE \
+                    --stack-name $stack_name \
+                    --region $REGION"
+                    echo $disable_termination_protection_command
+                    echo "Disabling termination protection:"
+                    $disable_termination_protection_command
+                else
+                    exit 1
+                fi
+            fi
+            
+            echo $delete_command
+            echo "Starting stack delete:"
+            $delete_command
 
             aws cloudformation \
             wait stack-delete-complete \
             --profile $PROFILE \
-            --stack-name $(get_stack_name $res) \
+            --stack-name $stack_name \
             --region $REGION
             exit 0
+        else
+            echo $delete_command
         fi
 
     done
