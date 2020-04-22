@@ -10,6 +10,7 @@ PROFILE=${PROFILE:-'profile-name'}
 PROJECT=${PROJECT:-'project-name'}
 ENV=${ENV:-'environment'}
 REGION=${REGION:-'eu-west-1'}
+SERVICE=${SERVICE:-'common'}
 PARAMETERS_FOLDER=${PARAMETERS_FOLDER:-'parameters'} # '.' if the same folder
 TEMPLATE_FOLDER=${TEMPLATE_FOLDER:-'.'}
 TEMPLATE_EXTENSION=${TEMPLATE_EXTENSION:-'yml'} #or yml. Depends on your preference
