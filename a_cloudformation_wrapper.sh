@@ -4,7 +4,7 @@
 SCRIPT_VERSION="1.0" #
 ######################
 
-set -e
+set -1
 
 PROFILE=${PROFILE:-'profile-name'}
 PROJECT=${PROJECT:-'project-name'}
