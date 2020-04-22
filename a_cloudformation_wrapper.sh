@@ -11,6 +11,7 @@ PROJECT=${PROJECT:-'project-name'}
 ENV=${ENV:-'environment'}
 REGION=${REGION:-'eu-west-1'}
 PARAMETERS_FOLDER=${PARAMETERS_FOLDER:-'parameters'} # '.' if the same folder
+TEMPLATE_FOLDER=${TEMPLATE_FOLDER:-'.'}
 TEMPLATE_EXTENSION=${TEMPLATE_EXTENSION:-'yml'} #or yml. Depends on your preference
 ENVIRONMENT_PARAMETER_NAME=${ENVIRONMENT_PARAMETER_NAME:-'EnvironmentVersion'}
 ALLOWED_ENVS="dev test int prd" # space separated list of allowed environment names
@@ -33,6 +34,7 @@ usage: $0 [-h] -o [create,update,delete,changeset,validate,status] -e [Environme
        -o      Operation to do. Allowed values [create, update, changeset, delete, validate, status]
        -d      Dry run. Only print aws commands
        -f      Force the execution of CFN even if local repo is behind the default remote one. Ignored if -d
+       -s      Service name to use
 
 
  CONVENTIONS:
@@ -67,8 +69,8 @@ create_stack(){
         create-stack \
         --profile $PROFILE \
         --stack-name $(get_stack_name $res) \
-        --template-body file://$res.$TEMPLATE_EXTENSION \
-        --parameters file://$PARAMETERS_FOLDER/$res-parameters-$ENV.json \
+        --template-body file://$TEMPLATE_FOLDER/$res.$TEMPLATE_EXTENSION \
+        --parameters file://$PARAMETERS_FOLDER/${SERVICE}-$ENV-$res.json \
         --region $REGION \
         --enable-termination-protection \
         --capabilities CAPABILITY_NAMED_IAM"
@@ -97,8 +99,8 @@ update_stack()
         update-stack \
         --profile $PROFILE \
         --stack-name $(get_stack_name $res) \
-        --template-body file://$res.$TEMPLATE_EXTENSION \
-        --parameters file://$PARAMETERS_FOLDER/$res-parameters-$ENV.json \
+        --template-body file://$TEMPLATE_FOLDER/$res.$TEMPLATE_EXTENSION \
+        --parameters file://$PARAMETERS_FOLDER/${SERVICE}-$ENV-$res.json \
         --region $REGION \
         --capabilities CAPABILITY_NAMED_IAM"
         echo $command
@@ -190,8 +192,8 @@ create_changeset_stack()
         create-change-set \
         --profile ${PROFILE} \
         --stack-name $(get_stack_name $res) \
-        --template-body file://$res.$TEMPLATE_EXTENSION \
-        --parameters file://$PARAMETERS_FOLDER/$res-parameters-$ENV.json \
+        --template-body file://$TEMPLATE_FOLDER/$res.$TEMPLATE_EXTENSION \
+        --parameters file://$PARAMETERS_FOLDER/${SERVICE}-$ENV-$res.json \
         --region $REGION \
         --capabilities CAPABILITY_NAMED_IAM \
         --change-set-name $res-changeset"
@@ -275,7 +277,7 @@ validate_stack()
         validate-template \
         --profile ${PROFILE} \
         --region $REGION \
-        --template-body file://$res.$TEMPLATE_EXTENSION"
+        --template-body file://$TEMPLATE_FOLDER/$res.$TEMPLATE_EXTENSION"
         echo $command
         if ! $DRY_RUN
         then
@@ -352,13 +354,13 @@ has_version()
 get_stack_name()
 {
     resource=$1
-    version=$(has_version $PARAMETERS_FOLDER/$resource-parameters-$ENV.json)
+    version=$(has_version $PARAMETERS_FOLDER/${SERVICE}-$ENV-$res.json)
 
     if [ $version ]
     then
-        name=$PROJECT-$ENV-$resource-$version
+        name=${SERVICE}-$ENV-$resource-$version
     else
-        name=$PROJECT-$ENV-$resource
+        name=${SERVICE}-$ENV-$resource
     fi
 
     echo $name
@@ -368,7 +370,7 @@ get_stack_name()
 ### MAIN ###
 ############
 
-while getopts "vhe:o:df" opt
+while getopts "vhe:o:s:df" opt
 do
      case $opt in
         h)
@@ -390,6 +392,9 @@ do
         v)
             print_version
             exit 1
+            ;;
+        s)
+            SERVICE=$OPTARG
             ;;
         ?)
             echo "Option/s error/s"
