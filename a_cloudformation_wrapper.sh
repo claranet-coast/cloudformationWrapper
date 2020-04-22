@@ -13,7 +13,7 @@ REGION=${REGION:-'eu-west-1'}
 PARAMETERS_FOLDER=${PARAMETERS_FOLDER:-'parameters'} # '.' if the same folder
 TEMPLATE_EXTENSION=${TEMPLATE_EXTENSION:-'yml'} #or yml. Depends on your preference
 ENVIRONMENT_PARAMETER_NAME=${ENVIRONMENT_PARAMETER_NAME:-'EnvironmentVersion'}
-ALLOWED_ENVS="dev test int prod" # space separated list of allowed environment names
+ALLOWED_ENVS="dev test int prd" # space separated list of allowed environment names
 
 RESOURCE=()
 OPERATION=''
