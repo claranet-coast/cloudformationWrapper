@@ -1,10 +1,10 @@
 #!/bin/bash
 
 ## Script Version ####
-SCRIPT_VERSION="1.0" #
+SCRIPT_VERSION="1.1" #
 ######################
 
-set -1
+set -e
 
 PROFILE=${PROFILE:-'profile-name'}
 PROJECT=${PROJECT:-'project-name'}
